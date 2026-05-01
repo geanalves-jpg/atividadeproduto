@@ -10,20 +10,17 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API de Remedios")
 
+@app.get("/remedios/{remedio_id}")
+def buscar_remedio(remedio_id: int, db: Session = Depends(get_db)):
+    remedio = crud.buscar_remedio(db, remedio_id)
+    if not remedio:
+        raise HTTPException(status_code=404, detail="Remédio não encontrado")
+    return remedio
+
 @app.get("/remedios")
 def listar_remedios(db: Session = Depends(get_db)):
-    remedios = db.query(Remedios).all()
-    return remedios
-
-@app.get("/remedios/{remedios_id}")
-def buscar_remedios(remedios_id: int, db: Session = Depends(get_db)):
-    remedios = db.query(Remedios).filter(Remedios.id == remedios_id).first()
-
-    if not remedios:
-        raise HTTPException(status_code=404, detail="Remédio não encontrado")
-
-    return remedios
-
+    return crud.listar_remedios(db)
+    
 @app.post("/remedios", response_model=RemediosResponse, status_code=201)
 def criar_remedio(dados: RemediosCreate, db: Session = Depends(get_db)):
     return crud.criar_remedio(db, dados)
@@ -33,7 +30,7 @@ def deletar_remedio(remedio_id: int, db: Session = Depends(get_db)):
     return crud.deletar_remedio(db, remedio_id) 
 
 @app.put("/remedios/{remedio_id}", response_model=RemediosResponse)
-def atualizar_remedio(remedio_id: int, dados: RemediosCreate, db: Session = Depends(get_db)):
+def atualizar_remedio(remedio_id: int, dados: RemediosUpdate, db: Session = Depends(get_db)):
     return crud.atualizar_remedio(db, remedio_id, dados)
 
 @app.patch("/remedios/{remedio_id}", response_model=RemediosResponse)
